@@ -1,37 +1,23 @@
-name: Auto Create and Merge PR
+name: Auto PR Creation for Issues
 
 on:
   push:
-    branches-ignore:
-      - main  # Ignore pushes to main to avoid unnecessary PRs
+    branches:
+      - 'issue_*'  # This pattern matches any branch starting with "issue_"
 
 jobs:
-  create-pr:
+  auto-pr:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Create Pull Request
-        id: create-pr
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref_name }}  # Get the branch name that triggered the push
-          base: main
-          title: "Auto PR: Merging ${{ github.ref_name }} into main"
-          body: "This PR merges the latest changes from ${{ github.ref_name }} into main and closes linked issues."
-          draft: false
-          delete-branch: true  # Deletes the feature branch after merging
-
-  auto-merge:
-    needs: create-pr  # Run auto-merge only after PR is created
-    runs-on: ubuntu-latest
-    steps:
-      - name: Enable Auto Merge
-        uses: peter-evans/enable-pull-request-automerge@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ steps.create-pr.outputs.pull-request-number }}
-          merge-method: squash  # Merge method: "merge", "squash", or "rebase"
-
+          base: main  # The target branch where you want to merge (main)
+          head: ${{ github.ref_name }}  # The branch where the changes were made
+          title: "Auto PR for ${{ github.ref_name }}"  # PR Title with branch name
+          body: "This PR was created automatically for merging changes into the main branch from ${{ github.ref_name }}"
